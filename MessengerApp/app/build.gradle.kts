@@ -69,4 +69,7 @@ dependencies {
 
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // WorkManager для фоновой синхронизации
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 }

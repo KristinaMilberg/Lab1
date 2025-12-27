@@ -11,6 +11,18 @@ import kotlinx.coroutines.launch
 
 class FeedViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val _likedIds = MutableLiveData<Set<Int>>(emptySet())
+    val likedIds: LiveData<Set<Int>> get() = _likedIds
+
+    fun toggleLike(id: Int) {
+        val current = _likedIds.value ?: emptySet()
+        _likedIds.value = if (current.contains(id)) {
+            current - id
+        } else {
+            current + id
+        }
+    }
+
     private val repository: MessageRepository
 
     val messages: LiveData<List<MessageEntity>>

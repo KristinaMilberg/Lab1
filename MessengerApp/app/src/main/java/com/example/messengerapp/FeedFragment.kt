@@ -5,18 +5,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.messengerapp.R
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class FeedFragment : Fragment() {
 
     private val viewModel: FeedViewModel by viewModels()
+
+    private lateinit var adapter: MessageAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,23 +37,31 @@ class FeedFragment : Fragment() {
         Log.d("Lifecycle", "onViewCreated FeedFragment")
 
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerMessages)
-        val refreshButton = view.findViewById<Button>(R.id.buttonRefresh)
-        val progressBar = view.findViewById<ProgressBar>(R.id.progressBar)
+        val refreshFab = view.findViewById<FloatingActionButton>(R.id.fabRefresh)
 
-        val adapter = MessageAdapter()
+        adapter = MessageAdapter(onLikeClick = { id ->
+            viewModel.toggleLike(id)
+        })
+
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
 
-        refreshButton.setOnClickListener {
+        refreshFab.setOnClickListener {
             viewModel.refreshMessages()
         }
 
         viewModel.messages.observe(viewLifecycleOwner) { list ->
-            adapter.submitList(list)
+            val liked = viewModel.likedIds.value ?: emptySet()
+            adapter.submitList(list, liked)
+        }
+
+        viewModel.likedIds.observe(viewLifecycleOwner) { liked ->
+            val current = viewModel.messages.value.orEmpty()
+            adapter.submitList(current, liked)
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            refreshFab.isEnabled = !isLoading
         }
 
         viewModel.error.observe(viewLifecycleOwner) { error ->
